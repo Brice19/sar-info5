@@ -1,0 +1,49 @@
+# Ignore class files
+*.class
+
+# Package Files
+*.jar
+*.war
+*.ear
+
+# Eclipse files
+.classpath
+.project
+.settings/
+.metadata/
+
+# VS Code files
+.vscode/
+
+# MacOS files
+.DS_Store
+
+# Windows files
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~.nib
+
+# Other IDEs and editors
+.idea/
+*.iml
+
+# Maven / Gradle
+target/
+build/
+out/
+
+# Byte-oriented circular buffers (if they create temp files)
+*.buffer
+
+# User-specific files
+*.user
+
