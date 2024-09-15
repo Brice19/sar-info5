@@ -1,0 +1,36 @@
+SPécification du Communication CHannel :
+
+Class Broker (Class qui permet de gérer les connexions) :
+- Broker(String name) : constructeur de la classe Broker
+- Channel accept(int port) : méthode qui permet d'accepter une connexion sur un port donné
+- Channel connect(String name, int port) : méthode qui permet de se connecter à un autre Broker
+
+Class Channel (Class qui permet de gérer les échanges de données) :
+- int read(byte[] bytes, int offset, int length) : méthode qui permet de lire des données
+- int write(byte[] bytes, int offset, int length) : méthode qui permet d'écrire des données
+- void disconnect() : méthode qui permet de se déconnecter
+- boolean disconnected() : méthode qui permet de savoir si on est déconnecté
+
+Class Task (Class qui permet de gérer les tâches) :
+- Task(Broker b, Runnable r) : constructeur de la classe Task
+- static Broker getBroker() : méthode qui permet de récupérer le Broker
+
+
+
+
+
+Use Case/ Test (echo server) :
+
+1. Mise en place initiale
+-   Instancier un Broker pour le serveur et un autre pour le client.
+-   Le serveur démarre et se met en attente de connexions sur un port défini.
+-   Le client initie une connexion vers ce port en utilisant son propre Broker.
+2. Transfert de données
+-   Le client transmet un message à travers le canal de communication établi.
+-   Le serveur réceptionne ce message en lisant les données via le canal.
+-   Après réception, le serveur retourne exactement le même message au client.
+-   Le client lit la réponse envoyée par le serveur pour confirmer que le message a bien été renvoyé.
+3. Clôture de la connexion
+-   Une fois l'échange de messages terminé, le client et le serveur coupent leur canal de communication respectif.
+-   La déconnexion est vérifiée pour s'assurer que les canaux ont bien été fermés des deux côtés.
+
