@@ -1,21 +1,60 @@
-SPécification du Communication CHannel :
+SPécification du Communication Channel :
 
-Class Broker (Class qui permet de gérer les connexions) :
-- Broker(String name) : constructeur de la classe Broker
-- Channel accept(int port) : méthode qui permet d'accepter une connexion sur un port donné
-- Channel connect(String name, int port) : méthode qui permet de se connecter à un autre Broker
+Classe Broker (Gestionnaire de connexions) :
+Description : Le Broker est la classe principale responsable de la gestion des connexions entre différentes tâches.
+ Chaque instance de Broker est identifiée par un nom unique et par un port dédié si il a le role de serveur.
+ Un Broker peut accepter un nombre illimité de connexions entrantes et sortantes.
+ Les Brokers sont conçus pour être multithreadés, gérant simultanément plusieurs connexions entrantes et sortantes. Cela permet une gestion efficace de plusieurs tâches communiquant en parallèle, tout en garantissant que chaque connexion est traitée de manière indépendante.
+- Broker(String name): Constructeur de la classe Broker qui initialise le gestionnaire avec un nom unique. Ce nom sert à identifier le Broker dans le système.
+- Channel accept(int port): Cette méthode permet d'attendre une connexion entrante sur un port spécifique. Elle bloque l'exécution jusqu'à ce qu'une tâche se connecte, puis retourne un objet Channel pour la communication.
+- Channel connect(String name, int port): Utilisée pour se connecter à un autre Broker identifié par un nom et un port. Elle retourne un Channel permettant d'échanger des données avec le Broker distant.
 
 Class Channel (Class qui permet de gérer les échanges de données) :
-- int read(byte[] bytes, int offset, int length) : méthode qui permet de lire des données
-- int write(byte[] bytes, int offset, int length) : méthode qui permet d'écrire des données
-- void disconnect() : méthode qui permet de se déconnecter
-- boolean disconnected() : méthode qui permet de savoir si on est déconnecté
+Description : La classe Channel représente un canal de communication bidirectionnel entre deux tâches. Elle permet d'envoyer et de recevoir des données sous forme d'octets de manière ordonnée et fiable.
+Les canaux sont de type FIFO (First-In-First-Out) et garantissent une transmission sans perte (lossless).
+Ils fonctionnent en mode full duplex, permettant aux deux extrémités de communiquer simultanément.
+Les canaux ne sont pas intrinsèquement protégés contre l'accès concurrent, car ils sont conçus pour être utilisés par deux tâches de manière synchronisée. Cependant, si plusieurs threads d'une même tâche doivent accéder au même canal, des mécanismes de synchronisation externes doivent être utilisés pour éviter les conditions de concurrence.
+Les canaux supportent la gestion asynchrone, permettant ainsi aux tâches de communiquer sans attendre la fin d'une opération de lecture ou d'écriture. Cela facilite une communication non bloquante entre les tâches.
+- int read(byte[] bytes, int offset, int length) : Lit des données provenant du canal dans le tableau bytes, à partir de l'offset spécifié, sur une longueur maximale de length octets. Retourne le nombre d'octets effectivement lus. Bloque si aucune donnée n'est disponible.
+- int write(byte[] bytes, int offset, int length) : Écrit des données dans le canal à partir du tableau bytes, en commençant à l'offset indiqué, pour une longueur de length octets. Retourne le nombre d'octets écrits.
+- void disconnect() : Met fin à la connexion sur ce canal. Une fois appelée, aucune donnée supplémentaire ne peut être envoyée ou reçue.
+- boolean disconnected() : Retourne true si le canal est déjà déconnecté, sinon false.
 
 Class Task (Class qui permet de gérer les tâches) :
-- Task(Broker b, Runnable r) : constructeur de la classe Task
-- static Broker getBroker() : méthode qui permet de récupérer le Broker
+Description : La classe Task représente une unité de travail qui s'exécute dans un thread distinct. Chaque Task est associée à un Broker et à une action (Runnable) à effectuer.
+- Task(Broker b, Runnable r) : Constructeur de la classe Task qui initialise la tâche avec un Broker et un Runnable pour définir le travail à exécuter.
+- static Broker getBroker() : Permet de récupérer le Broker associé à la tâche courante, offrant ainsi un moyen pour les tâches de communiquer via des canaux.
 
+Points à retenir :
+Les Broker gèrent les connexions et permettent de créer des canaux de communication entre les tâches.
+Les canaux (Channel) assurent un échange de données ordonné (FIFO) et sans perte.
+Les Task sont des unités de travail exécutables qui utilisent les Broker pour établir des connexions et communiquer.
 
+Note :
+On fais des canaux de communications, tache commnuquenet par eux V
+Une tache peut connaitre plusieur Brocker V
+Seulement entre 2 taches, qui utlisent le canal pour envoyer des octets
+--> Definir porpriete du canal
+Le Broker permet de creer des canaux de communication
+On aurait 2 Brocker (1 pour le serveur et 1 pour le client)
+avec un nom unqiue pour les differencier et un port pour le serveur
+Si on veut se connecter a quelqu'un on utilise le nom et le port
+Le port est unique pour chaque Broker (port 80 de Brocker1 pas le meme que port 80 de Brocker2)
+Un Brocker peut accepter un nombre de taches illimité
+
+On se conncete sur le nom du Brocker, et attendt que quelqu'un accepte la connexion
+
+ce canal est fifo et lossless ? (ici oui)
+flux bidirectionnel ? ici full duplex
+flux de packet (comme udp), donne longueur ou alors pas packet.... (nous flux libre?)
+
+question si nos canaux sont threader ou multi threader
+car nos broker sont multi threader
+
+broker multi threader
+channele n as pas de sens a etre proteger
+
+penser aux asynchrone
 
 
 
