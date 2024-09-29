@@ -8,7 +8,7 @@ public class BrokerManager {
 
     private static BrokerManager self;
 
-    static BrokerManager getSelf() {
+    public static BrokerManager getSelf() {
         if (self == null) {
             self = new BrokerManager();
         }
@@ -25,7 +25,7 @@ public class BrokerManager {
         brokers = new HashMap<String, Broker>();
     }
 
-    public static synchronized void addBroker(Broker broker) {
+    public synchronized void addBroker(Broker broker) {
         String name = broker.getName();
         Broker b = brokers.get(name);
         if (b == null) {
