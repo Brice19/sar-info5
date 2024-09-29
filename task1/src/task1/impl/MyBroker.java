@@ -1,37 +1,62 @@
 package task1.impl;
 
+import java.util.HashMap;
+
 import task1.abstact.Broker;
 import task1.abstact.Channel;
-import task1.impl.MyChannel;
 
 public class MyBroker extends Broker {
 
+    BrokerManager manager;
+    HashMap<Integer, RDV> accepts;
     public MyBroker(String name) {
         super(name);
+        accepts = new HashMap<Integer, RDV>();
+        manager = BrokerManager.getSelf();
+        manager.addBroker(this);    
     }
 
     @Override
-    public synchronized Channel accept(int port) {
-        // Gérer un RDV unique pour accepter une connexion
-        RDV rdv = new RDV(this);
-        rdv.come(this);
-
-        // Créer un canal après l'acceptation de la connexion
-        return new MyChannel(1024);
+    public Channel connect(String name, int port){
+        MyBroker b = (MyBroker) manager.getBroker(name);
+        if (b == null) {
+            throw new RuntimeException("Broker with name " + name + " does not exist");
+        }
+        return b.toConnect(this, port);
     }
 
     @Override
-    public synchronized Channel connect(String remoteBrokerName, int port) {
-        // Gérer un RDV unique pour se connecter à un autre Broker
-        RDV rdv = new RDV(this);
-        rdv.come(this);
+    public Channel accept(int port){
+        RDV rdv = null;
+        synchronized (accepts) {
+            rdv = accepts.get(port);
+            if (rdv != null) {
+                throw new RuntimeException("Port " + port + " already in use");
+            }
+            rdv = new RDV();
+            accepts.put(port, rdv);
+            accepts.notifyAll();
+        }
+        Channel c;
+        c = rdv.accept(this, port);
+        return c;
+    }
 
-        // Créer un canal pour la connexion
-        return new MyChannel(1024);
+    private Channel toConnect(MyBroker b, int port) {
+        RDV rdv = null;
+        synchronized (accepts) {
+            rdv = accepts.get(port);
+            while (rdv == null) {
+                try {
+                    accepts.wait();
+                } catch (InterruptedException e) {
+                }
+                rdv = accepts.get(port);
+            }
+        accepts.remove(port);
+        }
+        return rdv.connect(b, port);
     }
-    
-    @Override
-    public String getName() {
-        return this.name;  // Retourne le nom du broker
-    }
+
+
 }

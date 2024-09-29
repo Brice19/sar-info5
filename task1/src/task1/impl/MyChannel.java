@@ -1,80 +1,132 @@
 package task1.impl;
-import task1.abstact.*;
+import java.io.IOException;
+
+import task1.abstact.Broker;
+import task1.abstact.Channel;
 import utils.CircularBuffer;
 
 public class MyChannel extends Channel {
 
-    private final CircularBuffer buffer;
-    private volatile boolean isDisconnected;
+    int port;
+    CircularBuffer in, out;
+    Boolean disconnected;
+    MyChannel rch;
+    boolean dangling;
+    String rname;
 
-    public MyChannel(int capacity) {
-        this.buffer = new CircularBuffer(capacity);
-        this.isDisconnected = false;
+    protected MyChannel(Broker broker, int port) {
+        super(broker);
+        this.port = port;
+        this.in = new CircularBuffer(64);
+    }
+
+    void connect(MyChannel rch, String name){
+        this.rch = rch;
+        rch.rch = this;
+        this.out = rch.in;
+        rch.out = this.in;
+        this.rname = name;
     }
 
     @Override
-    public synchronized int write(byte[] bytes, int offset, int length) {
-        if (isDisconnected) {
-        	throw new IllegalStateException("Channel is disconnected");
-        }
-
-        int bytesWritten = 0;
-        for (int i = 0; i < length; i++) {
-            try {
-                buffer.push(bytes[offset + i]);
-                bytesWritten++;
-            } catch (IllegalStateException e) {
-                // Buffer plein, on attend qu'il y ait de la place
-                while (buffer.full()) {
-                    try {
-                        wait(); // Attendre que le buffer se vide un peu
-                    } catch (InterruptedException ie) {
-                        Thread.currentThread().interrupt(); // Bonne pratique pour gérer les interruptions
-                    }
-                }
+    public void disconnect() {
+        synchronized (this) {
+            if (disconnected()) {
+                return;
             }
+            disconnected = true;
+            rch.dangling = true;
         }
-        notifyAll(); // Notifier les threads en attente de lecture
-        return bytesWritten;
-    }
-
-    @Override
-    public synchronized int read(byte[] bytes, int offset, int length) {
-        if (isDisconnected && buffer.empty()) {
-        	 throw new IllegalStateException("Channel is disconnected and no more data to read");
+        synchronized (out) {
+            out.notifyAll();
         }
-
-        int bytesRead = 0;
-        for (int i = 0; i < length; i++) {
-            try {
-                bytes[offset + i] = buffer.pull();
-                bytesRead++;
-            } catch (IllegalStateException e) {
-                // Buffer vide, on attend que des données arrivent
-                while (buffer.empty()) {
-                    if (isDisconnected) {
-                    	 throw new IllegalStateException("Channel diconected while reading");
-                    }
-                    try {
-                        wait(); // Attendre que des données soient disponibles
-                    } catch (InterruptedException ie) {
-                        Thread.currentThread().interrupt();
-                    }
-                }
-            }
+        synchronized (in) {
+            in.notifyAll();
         }
-        notifyAll(); // Notifier les threads en attente d'écriture
-        return bytesRead;
-    }
-
-    @Override
-    public synchronized void disconnect() {
-        isDisconnected = true;
-        notifyAll(); // Réveiller tous les threads bloqués sur lecture/écriture
     }
 
     @Override
     public boolean disconnected() {
-        return isDisconnected;
+        return disconnected;
     }
+
+    public int read(byte[] bytes, int off, int len) throws IOException {
+        if (disconnected()) {
+            throw new IOException("Channel is disconnected");
+        }
+        int nb = 0;
+        try {
+            while(nb == 0) {
+                if (in.empty()) {
+                    synchronized (in) {
+                        while (in.empty()) {
+                            if (disconnected() || dangling) {
+                                throw new IOException("Channel is disconnected");
+                            }
+                            try {
+                                in.wait();
+                            } catch (InterruptedException e) {
+                            }
+                        }
+                    }
+                }
+                while (nb < len && !in.empty()) {
+                    byte c = in.pull();
+                    bytes[off + nb] = c;
+                    nb++;
+                }
+                if (nb != 0) {
+                    synchronized (in) {
+                        in.notify();
+                    }
+                }
+            } 
+         } catch (IOException e) {
+            if (!disconnected()) {
+                disconnected = true;
+                synchronized (out) {
+                    out.notifyAll();
+                }
+            }
+            throw e;
+        }
+        return nb;
+        }
+
+        public int write(byte[] bytes, int off, int len) throws IOException {
+            if (disconnected()) {
+                throw new IOException("Channel is disconnected");
+            }
+            int nb = 0;
+            while (nb == 0) {
+                if (out.full()) {
+                    synchronized (out) {
+                        while (out.full()) {
+                            if (disconnected()){
+                                throw new IOException("Channel is disconnected");
+                            }
+                            if (dangling) {
+                                return len;
+                            }
+                            try {
+                                out.wait();
+                            } catch (InterruptedException e) {
+                            }
+                        }
+                    }
+                }
+                while (nb < len && !out.full()) {
+                    byte c = bytes[off + nb];
+                    out.push(c);
+                    nb++;
+                }
+                if (nb != 0) {
+                    synchronized (out) {
+                        out.notify();
+                    }
+                }
+            
+            }
+            return nb;
+        }
 }
