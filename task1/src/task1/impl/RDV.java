@@ -1,7 +1,7 @@
 package task1.impl;
 
-import task1.abstact.Broker;
-import task1.abstact.Channel;
+import task1.abst.Broker;
+import task1.abst.Channel;
 
 public class RDV {
 

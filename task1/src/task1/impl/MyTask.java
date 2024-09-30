@@ -1,7 +1,7 @@
 package task1.impl;
 
 
-import task1.abstact.*;
+import task1.abst.*;
 
 
 public class MyTask extends Task {

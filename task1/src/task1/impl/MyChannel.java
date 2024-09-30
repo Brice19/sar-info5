@@ -1,21 +1,21 @@
 package task1.impl;
 import java.io.IOException;
 
-import task1.abstact.Broker;
-import task1.abstact.Channel;
+import task1.abst.Broker;
+import task1.abst.Channel;
 import utils.CircularBuffer;
 
 public class MyChannel extends Channel {
 
     int port;
     CircularBuffer in, out;
-    Boolean disconnected;
+    Boolean disconnected = false;
     MyChannel rch;
     boolean dangling;
     String rname;
 
     protected MyChannel(Broker broker, int port) {
-        super(broker);
+        super();	//super(broker)
         this.port = port;
         this.in = new CircularBuffer(64);
     }
@@ -50,9 +50,9 @@ public class MyChannel extends Channel {
         return disconnected;
     }
 
-    public int read(byte[] bytes, int off, int len) throws IOException {
+    public int read(byte[] bytes, int off, int len) throws DisconnectedException {
         if (disconnected()) {
-            throw new IOException("Channel is disconnected");
+            throw new DisconnectedException("Channel is disconnected");
         }
         int nb = 0;
         try {
@@ -61,7 +61,7 @@ public class MyChannel extends Channel {
                     synchronized (in) {
                         while (in.empty()) {
                             if (disconnected() || dangling) {
-                                throw new IOException("Channel is disconnected");
+                                throw new DisconnectedException("Channel is disconnected");
                             }
                             try {
                                 in.wait();
@@ -81,7 +81,7 @@ public class MyChannel extends Channel {
                     }
                 }
             } 
-         } catch (IOException e) {
+         } catch (DisconnectedException e) {
             if (!disconnected()) {
                 disconnected = true;
                 synchronized (out) {
@@ -93,9 +93,9 @@ public class MyChannel extends Channel {
         return nb;
         }
 
-        public int write(byte[] bytes, int off, int len) throws IOException {
+        public int write(byte[] bytes, int off, int len) throws DisconnectedException {
             if (disconnected()) {
-                throw new IOException("Channel is disconnected");
+                throw new DisconnectedException("Channel is disconnected");
             }
             int nb = 0;
             while (nb == 0) {
@@ -103,7 +103,7 @@ public class MyChannel extends Channel {
                     synchronized (out) {
                         while (out.full()) {
                             if (disconnected()){
-                                throw new IOException("Channel is disconnected");
+                                throw new DisconnectedException("Channel is disconnected");
                             }
                             if (dangling) {
                                 return len;

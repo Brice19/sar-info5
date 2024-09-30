@@ -2,12 +2,11 @@ package task1.impl;
 
 import java.util.HashMap;
 
-import task1.abstact.Broker;
-import task1.abstact.Channel;
+import task1.abst.*;
 
 public class MyBroker extends Broker {
 
-    BrokerManager manager;
+    private BrokerManager manager;
     HashMap<Integer, RDV> accepts;
     public MyBroker(String name) {
         super(name);
@@ -57,6 +56,12 @@ public class MyBroker extends Broker {
         }
         return rdv.connect(b, port);
     }
+
+	@Override
+	public String getName() {
+		
+		return this.name;
+	}
 
 
 }

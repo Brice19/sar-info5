@@ -1,8 +1,8 @@
 package task1.test;
 
 import task1.impl.*;
+import task1.abst.*;
 
-import java.io.IOException;
 import java.util.ArrayList;
 
 /**
@@ -11,12 +11,12 @@ import java.util.ArrayList;
  * Ajuster à mon code
  * 
  * Cette classe met en place un test simple de communication entre deux tâches
- * via un MyBroker et des canaux.
+ * via un MyMyBroker et des canaux.
  * 
- * - Un MyBrokers est créé : `Broker1`.
- * - MyTask 1 (associée à `Broker1`) attend une connexion sur le port 8080 et lit
+ * - Un MyMyBrokers est créé : `MyBroker1`.
+ * - MyMyTask 1 (associée à `MyBroker1`) attend une connexion sur le port 8080 et lit
  * les données reçues via un canal.
- * - MyTask 2 (associée à `Broker1`) se connecte à `Broker1` via le port 8080,
+ * - MyMyTask 2 (associée à `MyBroker1`) se connecte à `MyBroker1` via le port 8080,
  * envoie un message, puis se déconnecte.
  * - Les deux tâches sont exécutées simultanément et une fois la communication
  * terminée, un message indique la fin.
@@ -24,6 +24,7 @@ import java.util.ArrayList;
  * Ce test illustre l'utilisation de l'API pour établir une communication
  * bidirectionnelle entre tâches.
  */
+
 public class example {
 
     public final static String LOREM_IPSUM = "\n" + //
@@ -55,7 +56,7 @@ public class example {
         return (sizeBytes[0] << 24) | (sizeBytes[1] << 16) | (sizeBytes[2] << 8) | sizeBytes[3];
     }
 
-    public static int readMessageSize(MyChannel MyChannel) throws IOException {
+    public static int readMessageSize(MyChannel MyChannel) {
         byte[] sizeBytes = new byte[4];
         // We need to use a While loop to make sure we read all 4 bytes
         int bytesRead = 0;
@@ -70,7 +71,7 @@ public class example {
         return getSizeFromMessage(sizeBytes);
     }
 
-    public static byte[] readSizeAndMessage(MyChannel MyChannel) throws IOException {
+    public static byte[] readSizeAndMessage(MyChannel MyChannel) {
         int messageSize = readMessageSize(MyChannel);
         if (messageSize <= 0) {
             return null;
@@ -96,7 +97,7 @@ public class example {
         return buffer;
     }
 
-    public static void writeSizeAndMessage(MyChannel MyChannel, byte[] message) throws IOException {
+    public static void writeSizeAndMessage(MyChannel MyChannel, byte[] message) {
         byte[] sizeBytes = getMessageSize(message.length);
         byte[] buffer = new byte[sizeBytes.length + message.length];
         System.arraycopy(sizeBytes, 0, buffer, 0, sizeBytes.length);
@@ -121,11 +122,11 @@ public class example {
         // Create a new test object
         example test = new example();
         // Run the test
-        test.test1();
-        //test.test2();
-        //test.test3();
+      //  test.test1();
+     //   test.test2();
+        test.test3();
 
-        //test.test4();
+     //   test.test4();
     }
 
     protected class EchoServer implements Runnable {
@@ -179,7 +180,7 @@ public class example {
     }
 
     public void test1() {
-        MyBroker MyBroker = new MyBroker("Broker1");
+        MyBroker MyBroker = new MyBroker("MyBroker1");
 
         MyTask serverMyTask = new MyTask(MyBroker, new Runnable() {
             @Override
@@ -215,7 +216,7 @@ public class example {
             public void run() {
                 try {
                     // Connect to the server on port 8080
-                    MyChannel clientMyChannel = (MyChannel) MyBroker.connect("Broker1", 8080);
+                    MyChannel clientMyChannel = (MyChannel) MyBroker.connect("MyBroker1", 8080);
                     
 
                     int nbMessages = 0;
@@ -253,8 +254,8 @@ public class example {
     }
 
     public void test2() {
-        MyBroker MyBroker = new MyBroker("Broker1");
-        MyBroker MyBroker2 = new MyBroker("Broker2");
+        MyBroker MyBroker = new MyBroker("MyBroker1");
+        MyBroker MyBroker2 = new MyBroker("MyBroker2");
 
         MyTask serverMyTask = new MyTask(MyBroker, new Runnable() {
             @Override
@@ -286,7 +287,7 @@ public class example {
             public void run() {
                 try {
                     // Connect to the server on port 8080
-                    MyChannel clientMyChannel = (MyChannel) MyBroker2.connect("Broker1", 8080);
+                    MyChannel clientMyChannel = (MyChannel) MyBroker2.connect("MyBroker1", 8080);
                     
 
                     int nbMessages = 0;
@@ -326,7 +327,7 @@ public class example {
         ArrayList<MyBroker> MyBrokers = new ArrayList<MyBroker>();
         ArrayList<MyTask> MyTasks = new ArrayList<MyTask>();
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 1000; i++) {
             MyBroker MyBroker = new MyBroker("MyBroker" + i);
             MyBrokers.add(MyBroker);
             MyTask serverMyTask = new MyTask(MyBroker, new EchoServer(MyBroker, true, "MyBroker" + i, i));
@@ -345,7 +346,7 @@ public class example {
     }
 
     public void test4() {
-        MyBroker MyBroker = new MyBroker("Broker1");
+        MyBroker MyBroker = new MyBroker("MyBroker1");
 
         MyTask serverMyTask = new MyTask(MyBroker, new Runnable() {
             @Override
@@ -389,7 +390,7 @@ public class example {
             public void run() {
                 try {
                     // Connect to the server on port 8080
-                    MyChannel clientMyChannel = (MyChannel) MyBroker.connect("Broker1", 8080);
+                    MyChannel clientMyChannel = (MyChannel) MyBroker.connect("MyBroker1", 8080);
                     
 
                     int nbMessages = 0;

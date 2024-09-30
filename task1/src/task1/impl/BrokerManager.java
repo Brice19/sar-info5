@@ -2,7 +2,7 @@ package task1.impl;
 
 import java.util.HashMap;
 
-import task1.abstact.Broker;
+import task1.abst.Broker;
 
 public class BrokerManager {
 
@@ -19,7 +19,7 @@ public class BrokerManager {
         self = new BrokerManager();
     }
 
-    static HashMap<String, Broker> brokers;
+    public HashMap<String, Broker> brokers;
     
     private BrokerManager() {
         brokers = new HashMap<String, Broker>();
