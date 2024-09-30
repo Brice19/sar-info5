@@ -1,68 +1,84 @@
-# Vue d'ensemble : QueueBroker, MessageQueue et Task
-
-Ce framework permet l'envoi et la réception de messages entre tâches. Chaque message est transmis et reçu en une seule fois, et possède une charge utile de taille variable sous forme de tableau d'octets.
+# Spécification
 
 ## QueueBroker
 
-Le `QueueBroker` gère les connexions entre brokers et permet l'échange de messages via des files.
+Le `QueueBroker` est une extension du broker classique. Il gère les connexions entre brokers et retourne des `MessageQueue` au lieu de `Channel`. Les brokers utilisent les `MessageQueue` comme structure principale pour l'échange de messages.
 
-### Méthodes
+### Méthodes principales
 
-- **MessageQueue accept(int port)**  
-  Accepte une connexion entrante sur le port spécifié et retourne une `MessageQueue` pour échanger des messages.
+- **`MessageQueue accept(int port)`**  
+  Accepte une connexion entrante sur le port spécifié et retourne une `MessageQueue` pour permettre l'échange de messages complets.
 
-- **MessageQueue connect(String name, int port)**  
-  Tente de se connecter à un broker distant via le nom et le port spécifiés. Renvoie une `MessageQueue` si la connexion réussit.
+- **`MessageQueue connect(String name, int port)`**  
+  Tente de se connecter à un broker distant via le nom et le port indiqués. Renvoie une `MessageQueue` si la connexion est établie avec succès.
 
 ## MessageQueue
 
-La `MessageQueue` permet d'envoyer et de recevoir des messages entiers avec une charge utile variable.
+Le système de messagerie est basé sur les `MessageQueue`, qui remplacent les `Channel` traditionnels. Une `MessageQueue` est une file d'attente de messages où chaque message est traité comme un bloc distinct sous forme de tableau d'octets (`byte[]`). Les `MessageQueue` respectent un modèle FIFO (First In, First Out) et sont associées aux `Channel` pour les communications sous-jacentes.
 
-### Méthodes
+### Méthodes principales
 
-- **void send(byte[] bytes, int offset, int length)**  
-  Envoie un message contenant les octets à partir de `offset` pour une longueur donnée.
+```java
+void send(byte[] bytes, int offset, int length);
+byte[] receive();
+void close();
+boolean closed();
+```
 
-- **byte[] receive()**  
-  Reçoit un message complet sous forme de tableau d'octets. Bloque si aucun message n'est disponible.
+- **`void send(byte[] bytes, int offset, int length)`**  
+  Envoie un message complet (sous forme de tableau d'octets) à la file d'attente.
 
-- **void close()**  
-  Ferme la file de messages.
+  - **Paramètres** :
+    - `bytes` : Le tableau d'octets contenant le message à envoyer.
+    - `offset` : L'indice de départ du message dans le tableau d'octets.
+    - `length` : Le nombre d'octets à envoyer.  
+      Cette méthode est **bloquante** : elle attendra qu'il y ait suffisamment d'espace disponible dans la file d'attente pour envoyer le message dans son intégralité.
 
-- **boolean closed()**  
-  Indique si la file est fermée.
+- **`byte[] receive()`**  
+  Reçoit un message complet de la file d'attente et le retourne sous forme de tableau d'octets. Cette méthode est **bloquante** : elle attendra qu'un message soit disponible avant de retourner le tableau d'octets.
 
-## Task
+- **`void close()`**  
+  Ferme la `MessageQueue`. Une fois fermée, aucun autre message ne pourra être envoyé ou reçu via cette file.
 
-La classe `Task` permet d'exécuter des tâches en parallèle, chaque tâche pouvant être associée à un `Broker` ou un `QueueBroker`.
+- **`boolean closed()`**  
+  Retourne `true` si la `MessageQueue` est fermée, `false` sinon.
 
-### Méthodes
+  ## Task
 
-- **Broker getBroker()** / **QueueBroker getQueueBroker()**  
-  Renvoie le broker ou la file de messages associés à cette tâche.
+Chaque `Task` est associée à un `QueueBroker`.
 
-- **static Task getTask()**  
-  Retourne la tâche actuellement en cours d'exécution.
+### Méthodes principales
 
-# Fonctionnalités principales
+```java
+Task(Broker b, Runnable r);
+Task(QueueBroker b, Runnable r);
+Broker getBroker();
+QueueBroker getQueueBroker();
+static Task getTask();
+```
 
-- **Messages complets** : Chaque message est transmis comme un tout, avec une charge utile de taille variable.
-- **Blocage des opérations** : Les méthodes `send` et `receive` sont bloquantes, attendant respectivement que de l'espace soit disponible ou qu'un message soit reçu.
-- **Concurrence** : Les méthodes sont conçues pour permettre des échanges de messages sécurisés entre tâches, avec gestion des déconnexions.
+### `Task(Broker b, Runnable r)`
 
-NOTE IMPORTANTE :
-Pas d implementeion from scartch
-un crew broker utilise des broker
-MessageQ aggrege des channels
+Crée une nouvelle `Task` associée à un `Broker` et définit le `Runnable` qui sera exécuté par cette tâche.
 
-Dans messageQ ...
-on voit juste des broker, channel
+### `Task(QueueBroker b, Runnable r)`
 
-brokerQ == Qbroker
+Crée une nouvelle `Task` associée à un `QueueBroker` et définit le `Runnable` qui sera exécuté.
 
-tout travail dans messageQ
+### `Broker getBroker()`
 
-- il envoie/recoie un morceau , inverse du flux qui envoie un flux d oct
-  ici c est un flux de message, chaque message fais une taille diff
+Retourne le `Broker` associé à la `Task`.
 
-mettre regle sur qui peut ecrire, lire ect... en gardant la coherence des channel
+### `QueueBroker getQueueBroker()`
+
+Retourne le `QueueBroker` associé à la `Task`.
+
+### `static Task getTask()`
+
+Retourne la `Task` associée au thread en cours d'exécution, permettant d'accéder au contexte de la tâche courante.
+
+## Points importants
+
+- **Pas de réimplémentation depuis zéro** : Le `QueueBroker` utilise des `Brokers` pour la gestion des connexions, et `MessageQueue` s'appuie sur les `Channels`.
+- **Structure d'agrégation** : Les `MessageQueue` agrègent des `Channels`, assurant une gestion fluide des échanges de messages.
+- **Flux de messages** : Contrairement à un flux continu d'octets, chaque message dans une `MessageQueue` est une unité distincte, facilitant la lecture et l'écriture de blocs de données indépendants.

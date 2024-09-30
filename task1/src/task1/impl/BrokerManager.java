@@ -8,7 +8,7 @@ public class BrokerManager {
 
     private static BrokerManager self;
 
-    public static BrokerManager getSelf() {
+    static BrokerManager getSelf() {
         if (self == null) {
             self = new BrokerManager();
         }
