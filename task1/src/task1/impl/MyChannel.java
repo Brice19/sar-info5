@@ -11,22 +11,22 @@ import utils.CircularBuffer;
 public class MyChannel extends Channel {
 
     // Port number associated with the channel
-    private int port;
+    int port;
 
     // Circular buffers for managing data flow
-    private CircularBuffer in, out;
+     CircularBuffer in, out;
 
     // Flag indicating if the channel is disconnected
-    private Boolean disconnected = false;
+     Boolean disconnected = false;
 
     // Reference to the remote channel
-    private MyChannel rch;
+     MyChannel rch;
 
     // Indicates if the channel is dangling (i.e., the remote channel has been disconnected)
-    private boolean dangling;
+     boolean dangling;
 
     // Name of the remote broker this channel is connected to
-    private String rname;
+     String rname;
 
     /**
      * Constructs a MyChannel instance associated with a specific broker and port.

@@ -15,8 +15,8 @@ public class RDV {
     private MyChannel conChannel;
 
     // Brokers for the accepting and connecting channels
-    private Broker accBroker;
-    private Broker conBroker;
+     Broker accBroker;
+     Broker conBroker;
 
     /**
      * Utility method to handle waiting inside a synchronized block.
