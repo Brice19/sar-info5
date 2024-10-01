@@ -1,9 +1,10 @@
 package task1.test;
 
-import task1.impl.*;
-import task1.abst.*;
-
 import java.util.ArrayList;
+
+import task1.impl.MyBroker;
+import task1.impl.MyChannel;
+import task1.impl.MyTask;
 
 /**
  * 
