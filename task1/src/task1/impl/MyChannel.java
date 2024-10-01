@@ -1,5 +1,4 @@
 package task1.impl;
-import java.io.IOException;
 
 import task1.abst.Broker;
 import task1.abst.Channel;
