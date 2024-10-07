@@ -1,83 +1,79 @@
 package task2.impl;
 
-import java.util.HashMap;
-
-import task1.abst.Broker;
-import task1.impl.BrokerManager;
+import task1.impl.MyBroker;
 import task2.abst.MessageQueue;
 import task2.abst.QueueBroker;
 
 /**
- * MyQueueBroker is an implementation of the QueueBroker class,
- * managing the creation and synchronization of MessageQueues.
+ * MyQueueBroker is a concrete implementation of the abstract QueueBroker class.
+ * It manages MessageQueues by utilizing an internal Broker for establishing 
+ * channel-based connections.
  */
 public class MyQueueBroker extends QueueBroker {
 
-    // HashMap to store the active message queues for different ports
-    private HashMap<Integer, MessageQueue> messageQueues;
+    // Name of the QueueBroker
+    private String name;
+
+    // Broker used internally to handle channel-level connections
+    private MyBroker broker;
 
     /**
-     * Constructor to initialize MyQueueBroker with a specified Broker.
+     * Constructor to create a MyQueueBroker instance with a specified name.
+     * Initializes the internal Broker instance and registers it with BrokerManager.
      *
-     * @param broker The broker associated with this QueueBroker
+     * @param name The name of the QueueBroker
      */
-    public MyQueueBroker(Broker broker) {
-        super(broker);
-        this.messageQueues = new HashMap<>();
+    public MyQueueBroker(MyBroker broker) {
+        // Create a new Broker with the same name
+        this.broker = broker;
+        this.name = this.broker.getName();
+
     }
+    
+    public MyQueueBroker(String name) {
+		this.broker = new MyBroker(name);
+		this.name = name;
+	}
+    
 
     /**
-     * Returns the name of the QueueBroker, which is the same as the associated broker's name.
+     * Returns the name of the QueueBroker.
      *
      * @return The name of the QueueBroker
      */
     @Override
     public String name() {
-        return broker.getName(); // Uses the broker's name as the QueueBroker name
+        return this.name;
     }
 
     /**
-     * Accepts a connection on a specific port and creates a MessageQueue for communication.
+     * Accepts a connection on a specified port and returns a new MyMessageQueue.
+     * Utilizes the internal Broker to establish the connection and wrap the channel.
      *
-     * @param port The port to accept the connection on
-     * @return The MessageQueue associated with the accepted connection
+     * @param port The port number to accept connections on
+     * @return MyMessageQueue established for the accepted connection
      */
     @Override
-    public synchronized MessageQueue accept(int port) {
-        if (messageQueues.containsKey(port)) {
-            throw new RuntimeException("Port " + port + " already in use.");
-        }
-        MessageQueue queue = new MyMessageQueue(); // Creates a new MessageQueue instance
-        messageQueues.put(port, queue);
-        notifyAll(); // Notify any waiting threads that a connection has been accepted
-        return queue;
+    public MessageQueue accept(int port) {
+        // Use the internal Broker to accept a connection and obtain a ChannelAbstract
+        var channel = broker.accept(port);
+        // Wrap the ChannelAbstract in a MyMessageQueue and return it
+        return new MyMessageQueue(channel);
     }
 
     /**
-     * Connects to another QueueBroker by name and port, creating a MessageQueue for communication.
+     * Connects to another QueueBroker by its name and port, and returns a new MyMessageQueue.
+     * Utilizes the internal Broker to establish the connection and wrap the channel.
      *
-     * @param name The name of the QueueBroker to connect to
-     * @param port The port to connect on
-     * @return The MessageQueue associated with the established connection
+     * @param name The name of the target QueueBroker to connect to
+     * @param port The port number for the connection
+     * @return MyMessageQueue established between the current and the target QueueBroker
      */
     @Override
-    public synchronized MessageQueue connect(String name, int port) {
-        MyQueueBroker targetBroker = (MyQueueBroker) BrokerManager.getSelf().getBroker(name);
-        if (targetBroker == null) {
-            throw new RuntimeException("QueueBroker with name " + name + " does not exist.");
-        }
-        // Wait for the target broker to accept the connection on the given port
-        synchronized (targetBroker) {
-            while (!targetBroker.messageQueues.containsKey(port)) {
-                try {
-                    targetBroker.wait(); // Wait until the target broker accepts the connection
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            }
-        }
-        // Retrieve the existing MessageQueue from the target broker
-        MessageQueue queue = targetBroker.messageQueues.get(port);
-        return queue;
+    public MessageQueue connect(String name, int port) {
+        // Use the internal Broker to connect to the target QueueBroker's port
+        var channel = broker.connect(name, port);
+        // Wrap the ChannelAbstract in a MyMessageQueue and return it
+        return new MyMessageQueue(channel);
     }
 }

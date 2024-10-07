@@ -1,9 +1,8 @@
 package task2.abst;
 
-import task1.abst.Broker;
 
 public abstract class Task extends Thread {
-
+/*
     protected Broker broker;
     protected QueueBroker queueBroker;
 
@@ -26,8 +25,9 @@ public abstract class Task extends Thread {
         return queueBroker;
     }
 
+    // Implémentation à définir selon le contexte de l'application
     public static Task getTask() {
-        // Implémentation à définir selon le contexte de l'application
         return null;
     }
+    */
 }

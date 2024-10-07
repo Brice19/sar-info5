@@ -1,6 +1,8 @@
 package task1.abst;
 
-public abstract class Broker {
+import task2.abst.BaseBrokerAbstract;
+
+public abstract class Broker extends BaseBrokerAbstract{
 	protected String name;
 
 	public Broker(String name) {

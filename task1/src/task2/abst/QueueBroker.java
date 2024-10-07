@@ -2,13 +2,11 @@ package task2.abst;
 
 import task1.abst.Broker;
 
-public abstract class QueueBroker {
+public abstract class QueueBroker extends BaseBrokerAbstract{
 
     protected Broker broker;
 
-    public QueueBroker(Broker broker) {
-        this.broker = broker;
-    }
+ 
 
     public abstract String name();
 
