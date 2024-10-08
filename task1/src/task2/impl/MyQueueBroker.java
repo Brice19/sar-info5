@@ -4,11 +4,6 @@ import task1.impl.MyBroker;
 import task2.abst.MessageQueue;
 import task2.abst.QueueBroker;
 
-/**
- * MyQueueBroker is a concrete implementation of the abstract QueueBroker class.
- * It manages MessageQueues by utilizing an internal Broker for establishing 
- * channel-based connections.
- */
 public class MyQueueBroker extends QueueBroker {
 
     // Name of the QueueBroker

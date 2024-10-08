@@ -4,10 +4,7 @@ import java.nio.ByteBuffer;
 import task1.abst.Channel;
 import task2.abst.MessageQueue;
 
-/**
- * MyMessageQueue is a concrete implementation of the abstract MessageQueue class.
- * It handles the sending and receiving of complete messages using a Channel.
- */
+
 public class MyMessageQueue extends MessageQueue {
 
     // The Channel used for sending and receiving messages
