@@ -11,6 +11,9 @@ public class MyQueueBroker extends QueueBroker {
     // Broker used internally to handle channel-level connections
     private MyBroker broker;
 
+    // HashMap to store the port and the corresponding listener
+    private HashMap<Integer, AcceptListener> portListenerMap = new HashMap<>();
+
     public MyQueueBroker(String name) {
 
         this.broker = new MyBroker(name);

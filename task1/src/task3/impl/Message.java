@@ -12,6 +12,10 @@ public class Message {
 		this.length = length;
 	}
 
+	public Message(byte[] bytes) {
+		this(bytes, 0, bytes.length);
+	}
+
 	public byte[] getBytes() {
 		return bytes;
 	}

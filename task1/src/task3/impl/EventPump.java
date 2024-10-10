@@ -1,21 +1,24 @@
 package task3.impl;
 
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.LinkedList;
 
 public class EventPump extends Thread {
 
 
-    private final Queue<Runnable> taskQueue = new ConcurrentLinkedQueue<>();
+    public LinkedList<Runnable> taskQueue;
 
      // Singleton instance of the EventPump
-     private static final EventPump instance = new EventPump();
+     public static EventPump instance;
 
-     private EventPump() {}
+     public EventPump() {
+        taskQueue = new LinkedList<Runnable>();
+     }
 
          // Static method to get the single instance of the EventPump
-    public static EventPump getInstance() {
-        return instance;
+    static {
+        instance = new EventPump();
+        instance.setName("EventPump");
+        instance.start();
     }
 
     public void addTask(Runnable task) {
@@ -25,12 +28,13 @@ public class EventPump extends Thread {
     public void run() {
         while (true) {
             Runnable task = taskQueue.poll();
-            if (task != null) {
+            while(task != null) {
                 task.run();
+                task = taskQueue.poll();
             }
             // Optionally sleep to prevent tight looping if needed
         try {
-            Thread.sleep(10);  // Adjust sleep time as necessary to reduce CPU usage when the queue is empty
+            wait();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             break;
@@ -39,10 +43,31 @@ public class EventPump extends Thread {
         
     }
 
-    public void stopPump() {
-        addTask(new ExitEvent());
+    public synchronized void  post(Runnable task) {
+        addTask(task);
+      //  TODO
+      notify();
     }
 
+    public synchronized void stopPump() {
+        instance.taskQueue.clear();
+    }
 
+    static void getInstance() {
+		instance = new EventPump();
+	}
+
+    public synchronized void kill() {
+        stopPump();
+    }
+
+    public synchronized boolean killed() {
+        return instance.taskQueue.isEmpty();
+    }
+
+    public synchronized void restart() {
+        instance.taskQueue.clear();
+        notify();
+    }
 
 }
